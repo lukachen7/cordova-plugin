@@ -17,7 +17,25 @@
 - (void)pluginInitialize {
     NSString* tmpStr2 = [[self.commandDelegate settings] objectForKey:@"camera_usage_description"];
     NSLog(@"tmpstr:%@",tmpStr2);
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    //在这里获取应用程序Documents文件夹里的文件及文件夹列表
+    NSArray *documentPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentDir = [NSString stringWithFormat:@"%@/%@",[documentPaths firstObject],@"tmpphoto"];
+    [fileManager changeCurrentDirectoryPath:documentDir];
+    NSError *error = nil;
+    NSArray *fileList = [[NSArray alloc] init];
+    //fileList便是包含有该文件夹下所有文件的文件名及文件夹名的数组
+    fileList = [fileManager contentsOfDirectoryAtPath:documentDir error:&error];
+    
+    for (NSString *file in fileList){
+        dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+        dispatch_async(queue, ^{
+            [fileManager removeItemAtPath:[NSString stringWithFormat:@"%@/%@",documentDir,file] error:NULL];
+        });
+    }
 }
+
 - (void)getPhotos:(CDVInvokedUrlCommand*)command{
     NSArray *arguments = [command arguments];
     if ([arguments count] == 0) {
