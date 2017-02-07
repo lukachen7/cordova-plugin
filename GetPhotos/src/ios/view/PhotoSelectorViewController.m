@@ -12,8 +12,10 @@
 #import "UIImageView+WebCache.h"
 #import "UIButton+WebCache.h"
 #import "TZImagePickerController.h"
+#import "UIView+XLExtension.h"
+#import "XLPhotoBrowser.h"
 
-@interface PhotoSelectorViewController ()<TZImagePickerControllerDelegate>
+@interface PhotoSelectorViewController ()<TZImagePickerControllerDelegate, XLPhotoBrowserDelegate>
 
 @property (nonatomic, strong) UICollectionView *contentColl;
 @property (nonatomic, strong) UIButton *addImageBtn;
@@ -330,9 +332,15 @@
     return YES;
 }
 -(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
-    _editIndex = indexPath.row;
-    [self showActionSheet];
+//    _editIndex = indexPath.row;
+//    [self showActionSheet];
+    NSMutableArray *imagesArr = [NSMutableArray array];
+    for (UploadImageModel *tmpModel in _imageUrlList) {
+        [imagesArr addObject:tmpModel.data];
+    }
+    XLPhotoBrowser *browser = [XLPhotoBrowser showPhotoBrowserWithImages:imagesArr currentImageIndex:indexPath.row];
     
+    [browser setActionSheetWithTitle:@"图片管理" delegate:self cancelButtonTitle:nil deleteButtonTitle:@"删除" otherButtonTitles:nil];
 }
 
 /****actionSheet代理****/
@@ -402,6 +410,30 @@
 
     [picker dismissViewControllerAnimated:true completion:NULL];
     [_contentColl reloadData];
+}
+
+#pragma mark    -   XLPhotoBrowserDelegate
+
+- (void)photoBrowser:(XLPhotoBrowser *)browser clickActionSheetIndex:(NSInteger)actionSheetindex currentImageIndex:(NSInteger)currentImageIndex
+{
+    // do something yourself
+    switch (actionSheetindex) {
+        case 0: // 删除
+        {
+            NSLog(@"点击了actionSheet索引是:%zd , 当前展示的图片索引是:%zd",actionSheetindex,currentImageIndex);
+            [browser dismiss];
+            _editIndex = currentImageIndex;
+            [self deleteImageByEditIndex];
+            
+        }
+            break;
+        default:
+        {
+            NSLog(@"点击了actionSheet索引是:%zd , 当前展示的图片索引是:%zd",actionSheetindex,currentImageIndex);
+        }
+            break;
+    }
+    
 }
 
 @end
