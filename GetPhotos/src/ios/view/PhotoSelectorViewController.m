@@ -33,6 +33,7 @@
     if (self) {
         _imageUrlList = [NSMutableArray array];
         self.maxPhotoNum = 9;
+        self.isPreview = NO;
     }
     return self;
 }
@@ -288,6 +289,7 @@
             cell.uploadImage.image = cellDic.data;
         }else{
             [cell setImageUrl:cellDic.url];
+            cellDic.data = cell.uploadImage.image;
         }
         [cell setStatus:cellDic.status];
         
@@ -334,6 +336,10 @@
 -(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
 //    _editIndex = indexPath.row;
 //    [self showActionSheet];
+    if (!self.isPreview) {
+        return;
+    }
+    
     NSMutableArray *imagesArr = [NSMutableArray array];
     for (UploadImageModel *tmpModel in _imageUrlList) {
         [imagesArr addObject:tmpModel.data];

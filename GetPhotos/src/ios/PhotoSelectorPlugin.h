@@ -12,6 +12,7 @@
 @interface PhotoSelectorPlugin : CDVPlugin<photoSelectorDelegate>
 
 - (void)getPhotos:(CDVInvokedUrlCommand*)command;
-- (void)photoSelectorDidSubmit:(PhotoSelectorViewController *)content;
+- (void)getPhotosSimple:(CDVInvokedUrlCommand*)command;
+//- (void)photoSelectorDidSubmit:(PhotoSelectorViewController *)content;
 
 @end

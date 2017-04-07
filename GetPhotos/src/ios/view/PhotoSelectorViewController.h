@@ -27,6 +27,7 @@
 @interface PhotoSelectorViewController : UIViewController<UICollectionViewDataSource,UICollectionViewDelegate,UICollectionViewDelegateFlowLayout,UIActionSheetDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,UIGestureRecognizerDelegate>
 
 @property(assign,nonatomic)int maxPhotoNum;
+@property(assign,nonatomic)BOOL isPreview;
 
 @property(strong,nonatomic)id<photoSelectorDelegate> delegate;
 @property(strong,nonatomic,readonly)NSMutableArray *imageUrlList;

@@ -9,10 +9,12 @@
 #import "PhotoSelectorPlugin.h"
 #import "PhotoSelectorViewController.h"
 #import "UploadImageModel.h"
+#import "ImageUtil.h"
 
 
 @implementation PhotoSelectorPlugin{
     CDVInvokedUrlCommand *_commond;
+    CGFloat _imageQuality;
 }
 - (void)pluginInitialize {
     NSString* tmpStr2 = [[self.commandDelegate settings] objectForKey:@"camera_usage_description"];
@@ -36,12 +38,48 @@
     }
 }
 
+#pragma mark - 参数1为最大图片数默认1，参数2为压缩比例默认0.7
 - (void)getPhotos:(CDVInvokedUrlCommand*)command{
     NSArray *arguments = [command arguments];
-    if ([arguments count] == 0) {
+    if ([arguments count] < 2) {
+        arguments = @[@1,@0.7];
+    }
+    NSNumber *maxPhotoNum = [arguments objectAtIndex:0];
+    NSNumber *tmpQuality = [arguments objectAtIndex:1];
+    _imageQuality = [tmpQuality floatValue];
+    NSMutableArray *photoList = [NSMutableArray array];
+    for (int i=2; i<[arguments count]; i++) {
+        if ([arguments[i] isKindOfClass:[NSString class]]) {
+            NSLog(@"图片URL：%@",arguments[i]);
+            [photoList addObject:arguments[i]];
+        }
+    }
+    
+    _commond = command;
+    PhotoSelectorViewController *photoSelector = [[PhotoSelectorViewController alloc]init];
+    photoSelector.delegate = self;
+    photoSelector.isPreview = YES;
+    photoSelector.maxPhotoNum = [maxPhotoNum intValue];
+    [photoSelector setOriginalImages:photoList];
+    
+    //设置导航样式
+    UINavigationController *rootNav = [[UINavigationController alloc]initWithRootViewController:photoSelector];
+    rootNav.navigationBar.barTintColor = kVILightBlue;
+    rootNav.navigationBar.tintColor = [UIColor whiteColor];
+    rootNav.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName:[UIColor whiteColor]};
+    
+    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+    [self.viewController presentViewController:rootNav animated:YES completion:nil];
+}
+
+#pragma mark - 同getPhotos，不压缩，不预览，参数1为最大图片数默认1
+- (void)getPhotosSimple:(CDVInvokedUrlCommand*)command{
+    NSArray *arguments = [command arguments];
+    if ([arguments count] < 1) {
         arguments = @[@1];
     }
     NSNumber *maxPhotoNum = [arguments objectAtIndex:0];
+    _imageQuality = 1.0;
     NSMutableArray *photoList = [NSMutableArray array];
     for (int i=1; i<[arguments count]; i++) {
         if ([arguments[i] isKindOfClass:[NSString class]]) {
@@ -78,9 +116,9 @@
         NSString *tmpFileFullName;
         //由于重选图片会把url设置为空，所以优先判断url
         if (!model.url || [model.url isEqualToString:@""]) {
-            NSString *tmpFileName = [NSString stringWithFormat:@"%f.png",[[NSDate date] timeIntervalSince1970]];
+            NSString *tmpFileName = [NSString stringWithFormat:@"%f.jpg",[[NSDate date] timeIntervalSince1970]];
             tmpFileFullName = [NSString stringWithFormat:@"%@/%@",savePath,tmpFileName];
-            if ([fm createFileAtPath:tmpFileFullName contents:UIImagePNGRepresentation(model.data) attributes:nil]) {
+            if ([fm createFileAtPath:tmpFileFullName contents:[ImageUtil imageWithImage:model.data scaledToSize:model.data.size andQuality:_imageQuality] attributes:nil]) {
                 NSLog(@"保存文件：%@",tmpFileFullName);
                 [imageList addObject:tmpFileFullName];
             }else{
